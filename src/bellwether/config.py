@@ -1,15 +1,15 @@
-"""Central config — loads ../keys/.env and exposes typed constants.
+"""Central config — loads ../../../keys/.env and exposes typed constants.
 
-Secrets live OUTSIDE the Bellwether project tree (in ../keys/) so the
-submission deliverable can be zipped or pushed without dragging tokens
-along. Import this module anywhere in the project instead of touching
-os.environ directly:
+Secrets live OUTSIDE the Bellwether project tree (in the sibling `keys/`
+folder) so the submission deliverable can be zipped or pushed without
+dragging tokens along. Import this module anywhere in the package
+instead of touching os.environ directly:
 
     from bellwether import config
     headers = {"Authorization": f"Bearer {config.BRIGHTDATA_API_TOKEN}"}
 
-Run `python -m bellwether.config` (or `python Bellwether/config.py`)
-to verify which tokens are still missing.
+Run `bellwether verify` (or `python -m bellwether.config`) to check which
+tokens are still missing.
 """
 from __future__ import annotations
 
@@ -23,8 +23,9 @@ except ImportError:
     print("dotenv not installed — run: pip install python-dotenv", file=sys.stderr)
     raise
 
-# config.py is at Bellwether/config.py; secrets are at ../keys/.env
-ENV_FILE = Path(__file__).resolve().parent.parent / "keys" / ".env"
+# this file: Hackathons/Bellwether/src/bellwether/config.py
+# secrets:   Hackathons/keys/.env
+ENV_FILE = Path(__file__).resolve().parents[3] / "keys" / ".env"
 load_dotenv(ENV_FILE)
 
 
@@ -46,14 +47,14 @@ def _opt(name: str, default: str = "") -> str:
 BRIGHTDATA_API_TOKEN = _req("BRIGHTDATA_API_TOKEN")
 BRIGHTDATA_SERP_ZONE = _req("BRIGHTDATA_SERP_ZONE")
 BRIGHTDATA_LINKEDIN_DATASET_ID = _req("BRIGHTDATA_LINKEDIN_DATASET_ID")
-BRIGHTDATA_WEB_UNLOCKER_ZONE = _req("BRIGHTDATA_WEB_UNLOCKER_ZONE")
+BRIGHTDATA_WEB_UNLOCKER_ZONE = _opt("BRIGHTDATA_WEB_UNLOCKER_ZONE")
 
 # AMD / model host
 AMD_DEVCLOUD_API_KEY = _req("AMD_DEVCLOUD_API_KEY")
 AMD_INFERENCE_URL = _req("AMD_INFERENCE_URL")
 AMD_INFERENCE_MODEL = _opt("AMD_INFERENCE_MODEL", "ibm-granite/granite-3.1-8b-instruct")
 
-# Perplexity (Comet — the agentic browser)
+# Perplexity Comet
 PERPLEXITY_API_KEY = _req("PERPLEXITY_API_KEY")
 PERPLEXITY_COMET_SESSION_TOKEN = _opt("PERPLEXITY_COMET_SESSION_TOKEN") or _opt(
     "PERPLEXITY_COMPUTER_SESSION_TOKEN"

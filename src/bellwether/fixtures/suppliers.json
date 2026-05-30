@@ -4,20 +4,31 @@
     "name": "Acme Electronics Manufacturing Co.",
     "domain": "acme-electronics.example",
     "aliases": ["Acme EMS", "Acme Mfg"],
-    "hubspot_id": "demo-001"
+    "hubspot_id": "325057393364",
+    "linkedin_url": "https://www.linkedin.com/company/acme-electronics-manufacturing"
   },
   {
     "id": "bluewave-cm",
     "name": "Bluewave Contract Manufacturing",
     "domain": "bluewave-cm.example",
     "aliases": ["Bluewave"],
-    "hubspot_id": "demo-002"
+    "hubspot_id": "325033642699",
+    "linkedin_url": "https://www.linkedin.com/company/bluewave-contract-manufacturing"
   },
   {
     "id": "tranquil-corp",
     "name": "Tranquil Corp",
     "domain": "tranquil.example",
     "aliases": [],
-    "hubspot_id": "demo-003"
+    "hubspot_id": "325033557702",
+    "linkedin_url": "https://www.linkedin.com/company/tranquil-corp"
+  },
+  {
+    "id": "foxconn",
+    "name": "Foxconn Technology Group",
+    "domain": "foxconn.com",
+    "aliases": ["Foxconn", "Hon Hai", "Hon Hai Precision Industry"],
+    "hubspot_id": "325057832696",
+    "linkedin_url": "https://www.linkedin.com/company/foxconn"
   }
 ]

@@ -5,7 +5,7 @@ import hashlib
 from datetime import datetime, timezone
 from typing import Literal
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 Dimension = Literal[
     "financial_distress",
@@ -28,6 +28,7 @@ class Supplier(BaseModel):
     domain: str | None = None
     aliases: list[str] = Field(default_factory=list)
     hubspot_id: str | None = None
+    linkedin_url: str | None = None
 
 
 class EvidenceRecord(BaseModel):

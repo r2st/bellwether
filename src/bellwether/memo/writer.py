@@ -1,7 +1,7 @@
 """Memo writer — Markdown with every score hyperlinked to its source."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from ..models import EvidenceRecord, Memo, RiskScore, Supplier
@@ -23,7 +23,7 @@ def write_memo(
     if out_dir is not None:
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
-        date = datetime.utcnow().strftime("%Y-%m-%d")
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         (out_dir / f"{supplier.id}-{date}.md").write_text(body)
         (out_dir / f"{supplier.id}-{date}.json").write_text(memo.model_dump_json(indent=2))
     return memo
@@ -76,10 +76,16 @@ def _render(supplier: Supplier, score: RiskScore, idx: dict[str, EvidenceRecord]
 
 
 def _headline(score: RiskScore) -> str:
+    has_sanctions = any(s.dimension == "sanctions" and s.severity >= 8 for s in score.top_signals)
+    if has_sanctions:
+        return "STOP — sanctions hit"
+    if any("bankruptcy" in s.description.lower() or "chapter 11" in s.description.lower()
+           for s in score.top_signals):
+        return "STOP — bankruptcy signal"
     if score.score >= 9.0:
-        return "STOP — sanctions or bankruptcy signal"
+        return "STOP — multiple high-severity signals stacked"
     if score.score >= 7.0:
-        return "Review required — multiple high-severity signals"
+        return "Review required — multiple material signals"
     if score.score >= 4.0:
         return "Watch — material signals present"
     if score.score >= 1.0:

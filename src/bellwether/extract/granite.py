@@ -64,14 +64,18 @@ class GraniteExtractor:
 
 _PATTERNS: list[tuple[str, str, int]] = [
     # (regex, dimension, severity)
-    (r"\b(layoff|layoffs|reduction in force|RIF)\b", "financial_distress", 6),
-    (r"\b(bankruptcy|chapter 11|insolvent)\b", "financial_distress", 9),
-    (r"\b(missed earnings|guidance cut|profit warning)\b", "financial_distress", 5),
-    (r"\b(CEO|CFO|COO|CTO).{0,40}\b(depart|stepped down|resigned|fired)\b", "leadership_churn", 7),
-    (r"\b(lawsuit|sued|litigation|class action)\b", "legal_exposure", 6),
-    (r"\b(SEC investigation|DOJ probe|indictment)\b", "legal_exposure", 8),
-    (r"\b(OFAC|SDN|sanctioned|sanctions list)\b", "sanctions", 10),
-    (r"\b(recall|defect|safety issue|complaint)\b", "operational_chatter", 4),
+    (r"\b(bankruptcy|chapter 11|insolvent|insolvency)\b", "financial_distress", 9),
+    (r"\b(layoffs?|workforce reduction|reduction in force|RIF|job cuts?|cutting (?:\d+|hundreds|thousands))\b",
+     "financial_distress", 6),
+    (r"\b(miss(?:ed|es)?\s+(?:earnings|guidance|consensus)|cut\s+(?:full-year\s+)?guidance|profit warning|guidance cut)\b",
+     "financial_distress", 5),
+    (r"\b(CEO|CFO|COO|CTO|President)\b.{0,60}\b(depart|departs?|departure|step(?:ped|s|ping)?\s+down|resign(?:ed|s|ing)?|fired|ousted|replaced)\b",
+     "leadership_churn", 7),
+    (r"\b(SEC investigation|DOJ probe|indictment|indicted)\b", "legal_exposure", 8),
+    (r"\b(lawsuit|sued|litigation|class action|breach[- ]of[- ]contract|files?\s+(?:a\s+)?suit|alleges?)\b",
+     "legal_exposure", 6),
+    (r"\b(OFAC|SDN(?:\s+list)?|sanctioned|sanctions list|denied parties)\b", "sanctions", 10),
+    (r"\b(recall|defect|safety issue|consumer complaint|quality issue)\b", "operational_chatter", 4),
 ]
 
 

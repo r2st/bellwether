@@ -5,6 +5,7 @@
 > in your CRM — autonomously, with every claim cited.
 
 **Hackathon:** Web Data UNLOCKED · lablab.ai (May 25–30, 2026), SF finale May 30–31.
+**Author:** Subhendu Das — solo build, no team.
 
 The name *Bellwether* is what procurement teams call the supplier whose
 behavior signals the herd. The product turns that idea inside out: a bellwether
@@ -16,20 +17,39 @@ behavior signals the herd. The product turns that idea inside out: a bellwether
 
 Every morning at 06:00 local, Bellwether:
 
-1. Reads your supplier list out of HubSpot.
-2. For each supplier, fans out a small CrewAI crew (researcher, watchman,
-   compliance, writer) that queries the live web through Bright Data — SERP,
-   LinkedIn, court records, sanctions lists.
-3. Hands the evidence to an IBM Granite model hosted on AMD MI300X to extract
-   structured risk signals.
-4. Scores the supplier with deterministic Python (so the math is auditable),
-   then writes a one-page memo with every score hyperlinked to its source.
-5. Drives the CRM in-browser with Perplexity Comet to file a *Supplier Review*
-   ticket and assign it to the account owner.
+1. Reads the supplier list (packaged demo fixtures today; HubSpot pull on
+   Day 4 — see *Status* below).
+2. For each supplier, queries the live web through Bright Data — SERP and
+   LinkedIn — and caches every response with provenance.
+3. Fetches the OFAC SDN list directly from Treasury and runs a deterministic
+   match — Granite is never allowed to *decide* a sanctions hit.
+4. Hands the rest of the evidence to an IBM Granite model on AMD MI300X to
+   extract structured risk signals (with a regex MockExtractor fallback when
+   the GPU is cold).
+5. Scores the supplier with deterministic Python (the math is auditable in
+   ~40 lines), then writes a one-page Markdown memo with every score
+   hyperlinked to its source.
+6. *(Day 4)* Files a *Supplier Review* ticket in the buyer's HubSpot tenant
+   and assigns the account owner — via the REST API, with Perplexity Comet
+   driving the same flow in-browser when its session token is set.
 
 If a supplier is quiet, the memo is a one-line "no change." If a sanctions hit
 lands, the ticket is opened at severity-1 within minutes of the source list
 updating.
+
+### Status (2026-05-30)
+
+| Step                            | State                                       |
+| ------------------------------- | ------------------------------------------- |
+| Bright Data evidence collectors | Live + fixture mock                         |
+| OFAC sanctions lookup           | Direct (CSV-parsed, async + day-cached)     |
+| Granite extractor (MI300X)      | Live + regex MockExtractor                  |
+| Deterministic scorer            | Live + test-pinned                          |
+| Markdown memo with citations    | Live                                        |
+| Auditor view (HTML)             | Live + per-supplier + morning index page    |
+| CrewAI orchestration            | Live; falls back to sequential pipeline     |
+| HubSpot ticket filer            | Live; attaches memo .md, assigns owner      |
+| Perplexity Comet driver         | Gated by session token; REST fallback ready |
 
 ---
 
@@ -37,11 +57,11 @@ updating.
 
 | Layer            | Tool                            | Why it's here                         |
 | ---------------- | ------------------------------- | ------------------------------------- |
-| Live web data    | Bright Data (SERP, LinkedIn, Web Unlocker) | Fresh evidence, not stale DBs |
-| Model hosting    | AMD MI300X + ROCm + vLLM        | Self-hosted Granite, no token-meter   |
+| Live web data    | Bright Data (SERP, LinkedIn, Web Unlocker) | Fresh evidence on private companies, with provenance per record |
+| Model hosting    | AMD MI300X + ROCm + vLLM        | Free inference under sponsor credits; vLLM gives strict JSON-mode for structured extraction |
 | Extraction model | IBM Granite 3.1 8B Instruct     | Cheap, strong at JSON-mode extraction |
-| Orchestration    | CrewAI                          | One crew per supplier, parallel fan-out |
-| Last-mile action | Perplexity Comet                | Drives the CRM the way a human would  |
+| Orchestration    | CrewAI                          | Four-agent crew per supplier (Researcher / Compliance / Analyst / Writer) |
+| Last-mile action | Perplexity Comet                | Drives the CRM the way a human would — REST fallback always available |
 | Demo CRM         | HubSpot (free tier)             | Lowest-friction enterprise surface    |
 
 Full architecture, day-by-day build plan, and the 6-minute demo script live in
@@ -54,16 +74,25 @@ Full architecture, day-by-day build plan, and the 6-minute demo script live in
 ```
 Bellwether/
 ├── README.md              ← this file
-├── config.py              ← loads ../keys/.env, exposes typed constants
 ├── pyproject.toml         ← installable as `bellwether` (pip install -e .)
+├── tests/                 ← pytest — pin the scorer's behavior
 └── src/bellwether/
     ├── __init__.py
-    ├── brightdata/        ← live web evidence collectors
-    ├── extract/           ← Granite prompts + Pydantic signal schemas
-    ├── score/             ← deterministic risk scorer
-    ├── crew/              ← CrewAI agent definitions
-    ├── action/            ← Perplexity Comet flows that file the ticket
-    └── cli.py             ← `bellwether run --supplier <id>`
+    ├── config.py          ← loads ../../../keys/.env; typed constants
+    ├── cli.py             ← `bellwether {run,suppliers,view,ping,verify}`
+    ├── runner.py          ← collect → extract → score → memo (via crew/)
+    ├── health.py          ← provider health checks behind `bellwether ping`
+    ├── models.py          ← Pydantic: Supplier, EvidenceRecord, RiskSignal, …
+    ├── evidence/          ← Bright Data client, SERP/LinkedIn/OFAC collectors, disk cache
+    ├── extract/           ← Granite vLLM client + offline MockExtractor
+    ├── score/             ← deterministic weighted-sum scorer
+    ├── memo/              ← Markdown memo writer with cited sources
+    ├── crew/              ← CrewAI four-agent orchestrator (Researcher / Compliance / Analyst / Writer)
+    ├── hubspot/           ← Private-App REST client — list suppliers, file tickets, attach memos
+    ├── comet/             ← Perplexity Comet driver — browser-driven CRM action with REST fallback
+    ├── auditor/           ← HTML audit pages + dashboard for the demo
+    ├── mcp/               ← MCP server — exposes the latest cited memo to Claude Desktop / Cursor
+    └── fixtures/          ← demo suppliers + seeded evidence for --mock runs
 ```
 
 Secrets and research are kept **outside** this folder on purpose:
@@ -79,12 +108,26 @@ This means the submission can be zipped or pushed by archiving the
 ## Run it
 
 ```bash
-# from the repo root
-cd Bellwether
-pip install -e .                  # registers the `bellwether` package
-python config.py                  # confirms all tokens are set
-bellwether run --supplier acme    # one supplier, end-to-end
-bellwether run --all              # the morning batch
+# from Bellwether/
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -e .                                # registers `bellwether` CLI
+
+# Offline — runs against packaged fixtures, no tokens needed
+bellwether suppliers                            # list demo suppliers
+bellwether run --supplier acme-electronics --mock
+bellwether run --all --mock                     # full morning batch
+
+# Live — needs keys/.env populated (see ../keys/SIGNUP_CHECKLIST.md)
+bellwether verify                               # show missing tokens
+bellwether run --supplier acme-electronics      # live Bright Data + Granite
+
+# Tests
+pytest tests/ -q
 ```
 
-The build is staged across five days; see the build plan for what ships when.
+Memos land in `./memos/<supplier>-<date>.{md,json}`. Cached Bright Data
+responses land in `./.cache/evidence/<id-prefix>/<id>.json`. Both are
+gitignored.
+
+The build is staged across five days; see the [build plan](../research/procurement-counter-intel.html)
+for what ships when.

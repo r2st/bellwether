@@ -11,7 +11,9 @@ the payload format, only this file changes.
 from __future__ import annotations
 
 import asyncio
+import json
 from typing import Any
+from urllib.parse import quote_plus
 
 import httpx
 
@@ -43,17 +45,49 @@ class BrightDataClient:
     async def aclose(self) -> None:
         await self._client.aclose()
 
+    def _serp_url(self, query: str, *, country: str, num: int) -> str:
+        """Build the Google news-SERP URL with proper percent-encoding.
+
+        - `brd_json=1` flips Bright Data into structured-output mode — without
+          it the response is raw HTML wrapped in JSON and item extraction
+          yields zero results.
+        - `nfpr=1` (no-fall-back-page-rank) disables Google's "showing
+          results for similar queries" auto-broadening. Without it, a quoted
+          phrase with no exact match silently degrades to a loose-match SERP,
+          which floods Bellwether with unrelated companies' news.
+        """
+        return (
+            "https://www.google.com/search?"
+            f"q={quote_plus(query)}&tbm=nws&num={num}&gl={quote_plus(country)}"
+            f"&nfpr=1&brd_json=1"
+        )
+
     async def serp(self, query: str, *, country: str = "us", num: int = 10) -> dict[str, Any]:
-        """News-flavored SERP. Returns Bright Data's JSON envelope."""
+        """News-flavored SERP. Returns the inner parsed dict (with `news`, `organic`, etc).
+
+        BD wraps the response: `{"status_code": 200, "headers": {...}, "body": "..."}`.
+        With `brd_json=1` the body is a JSON string we parse here so the caller
+        sees the structured shape directly.
+        """
         payload = {
             "zone": self.serp_zone,
-            "url": f"https://www.google.com/search?q={httpx.QueryParams({'q': query})['q']}&tbm=nws&num={num}&gl={country}",
+            "url": self._serp_url(query, country=country, num=num),
             "format": "json",
         }
         r = await self._client.post(f"{BRIGHTDATA_BASE}/request", json=payload)
         if r.status_code >= 400:
             raise BrightDataError(f"SERP {r.status_code}: {r.text[:200]}")
-        return r.json()
+        envelope = r.json()
+        body = envelope.get("body") if isinstance(envelope, dict) else None
+        if isinstance(body, str):
+            try:
+                return json.loads(body)
+            except json.JSONDecodeError:
+                raise BrightDataError(
+                    f"SERP body wasn't JSON (got {body[:80]!r}); make sure brd_json=1 is in the URL"
+                )
+        # Older or different shapes fall through unchanged.
+        return envelope if isinstance(envelope, dict) else {}
 
     async def fetch_url(self, url: str) -> str:
         """Web Unlocker — fetch arbitrary URL HTML."""

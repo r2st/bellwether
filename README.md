@@ -36,8 +36,7 @@ timestamp shown — judges can audit any claim in two clicks.
 
 Every morning at 06:00 local, Bellwether:
 
-1. Reads the supplier list (packaged demo fixtures today; HubSpot pull on
-   Day 4 — see *Status* below).
+1. Reads the supplier list from packaged demo fixtures or a HubSpot tenant.
 2. For each supplier, queries the live web through Bright Data — SERP and
    LinkedIn — and caches every response with provenance.
 3. Fetches the OFAC SDN list directly from Treasury and runs a deterministic
@@ -48,9 +47,9 @@ Every morning at 06:00 local, Bellwether:
 5. Scores the supplier with deterministic Python (the math is auditable in
    ~40 lines), then writes a one-page Markdown memo with every score
    hyperlinked to its source.
-6. *(Day 4)* Files a *Supplier Review* ticket in the buyer's HubSpot tenant
-   and assigns the account owner — via the REST API, with Perplexity Comet
-   driving the same flow in-browser when its session token is set.
+6. Files a *Supplier Review* ticket in the buyer's HubSpot tenant and assigns
+   the account owner — via the REST API, with Perplexity Comet driving the same
+   flow in-browser when its session token is set.
 
 If a supplier is quiet, the memo is a one-line "no change." If a sanctions hit
 lands, the ticket is opened at severity-1 within minutes of the source list
@@ -83,8 +82,9 @@ updating.
 | Last-mile action | Perplexity Comet                | Drives the CRM the way a human would — REST fallback always available |
 | Demo CRM         | HubSpot (free tier)             | Lowest-friction enterprise surface    |
 
-Full architecture, day-by-day build plan, and the 6-minute demo script live in
-[`../research/procurement-counter-intel.html`](../research/procurement-counter-intel.html).
+The public repo keeps the implementation, fixtures, tests, and demo assets in
+one place. Private signup notes, local tokens, and pitch rehearsal material stay
+outside the repository.
 
 ---
 
@@ -97,7 +97,7 @@ Bellwether/
 ├── tests/                 ← pytest — pin the scorer's behavior
 └── src/bellwether/
     ├── __init__.py
-    ├── config.py          ← loads ../../../keys/.env; typed constants
+    ├── config.py          ← loads environment variables / sibling keys/.env
     ├── cli.py             ← `bellwether {run,suppliers,view,ping,verify}`
     ├── runner.py          ← collect → extract → score → memo (via crew/)
     ├── health.py          ← provider health checks behind `bellwether ping`
@@ -114,13 +114,10 @@ Bellwether/
     └── fixtures/          ← demo suppliers + seeded evidence for --mock runs
 ```
 
-Secrets and research are kept **outside** this folder on purpose:
-
-- [`../keys/`](../keys/) — `.env` and the signup checklist (gitignored)
-- [`../research/`](../research/) — ideation HTMLs, sponsor mapping, build plan
-
-This means the submission can be zipped or pushed by archiving the
-`Bellwether/` folder alone — no token leaks, no working-doc noise.
+Secrets are kept **outside** this folder on purpose. Live mode expects either
+exported environment variables or a sibling `keys/.env` file one directory above
+the repo; `.env` files are gitignored. This keeps the public submission safe to
+zip or push without token leaks or working-doc noise.
 
 ---
 
@@ -136,7 +133,7 @@ bellwether suppliers                            # list demo suppliers
 bellwether run --supplier acme-electronics --mock
 bellwether run --all --mock                     # full morning batch
 
-# Live — needs keys/.env populated (see ../keys/SIGNUP_CHECKLIST.md)
+# Live — needs environment variables or a sibling ../keys/.env
 bellwether verify                               # show missing tokens
 bellwether run --supplier acme-electronics      # live Bright Data + Granite
 
@@ -148,5 +145,5 @@ Memos land in `./memos/<supplier>-<date>.{md,json}`. Cached Bright Data
 responses land in `./.cache/evidence/<id-prefix>/<id>.json`. Both are
 gitignored.
 
-The build is staged across five days; see the [build plan](../research/procurement-counter-intel.html)
-for what ships when.
+The build landed in roughly three hours of focused work; the repo is scoped to
+the runnable submission artifact.

@@ -1,0 +1,26 @@
+[
+  {
+    "source_url": "https://news.example.com/acme-layoffs-march",
+    "title": "Acme Electronics announces 12% workforce reduction amid demand slowdown",
+    "snippet": "Contract manufacturer Acme Electronics confirmed layoffs of roughly 400 staff across its Penang and Guadalajara facilities, citing softer orders from automotive customers.",
+    "published_at": "2026-05-27T14:00:00Z"
+  },
+  {
+    "source_url": "https://news.example.com/acme-cfo-departs",
+    "title": "Acme CFO Sarah Wen steps down after four years",
+    "snippet": "Wen, who joined from Flex in 2022, will be replaced by interim CFO Daniel Park while the board conducts a search. The announcement followed last week's earnings call.",
+    "published_at": "2026-05-29T09:00:00Z"
+  },
+  {
+    "source_url": "https://news.example.com/acme-q1-miss",
+    "title": "Acme Electronics misses Q1 earnings guidance",
+    "snippet": "Revenue came in at $412M against consensus of $445M; the company cut full-year guidance and noted higher inventory carrying costs.",
+    "published_at": "2026-05-22T16:30:00Z"
+  },
+  {
+    "source_url": "https://courtlistener.example.com/acme-vs-supplier-x",
+    "title": "Supplier X files breach-of-contract suit against Acme",
+    "snippet": "A second-tier supplier alleges Acme failed to honor minimum-volume commitments on a 2024 master services agreement; damages sought of $18M.",
+    "published_at": "2026-05-20T11:00:00Z"
+  }
+]

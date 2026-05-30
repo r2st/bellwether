@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Secrets — kept in ../keys/ outside the package
+.env
+.env.*
+!.env.example
+
+# Cache / artifacts
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.log
+memos/

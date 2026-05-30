@@ -8,9 +8,27 @@
 **Author:** Subhendu Das — solo build, no team.
 **Live demo:** <https://bellwether-demo.vercel.app/acme>
 
+![Bellwether — Acme Electronics audit page, score 9.6 STOP](docs/demo-acme.png)
+
 The name *Bellwether* is what procurement teams call the supplier whose
 behavior signals the herd. The product turns that idea inside out: a bellwether
 *for* your suppliers, ringing the bell before a delivery slips.
+
+### Try the demo
+
+The demo deploys static audit pages for three fictional suppliers, one per
+risk state. No login, no setup — open and click:
+
+| URL | What you'll see |
+| --- | --- |
+| [`/`](https://bellwether-demo.vercel.app/) | Morning dashboard — all three suppliers, sorted by score |
+| [`/tranquil`](https://bellwether-demo.vercel.app/tranquil) | **STOP** (10.0) — sanctions hit; severity-1 ticket would auto-file |
+| [`/acme`](https://bellwether-demo.vercel.app/acme) | **Watch** (9.6) — legal + financial + leadership signals stacked |
+| [`/bluewave`](https://bellwether-demo.vercel.app/bluewave) | **Quiet** (0.0) — no change today, one-line memo |
+
+Every score on every page is hyperlinked to the underlying evidence record
+(SERP result, LinkedIn snapshot, OFAC entry), with the Bright Data fetch
+timestamp shown — judges can audit any claim in two clicks.
 
 ---
 

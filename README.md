@@ -6,6 +6,7 @@
 
 **Hackathon:** Web Data UNLOCKED · lablab.ai (May 25–30, 2026), SF finale May 30–31.
 **Author:** Subhendu Das — solo build, no team.
+**Live demo:** <https://bellwether-demo.vercel.app/acme>
 
 The name *Bellwether* is what procurement teams call the supplier whose
 behavior signals the herd. The product turns that idea inside out: a bellwether

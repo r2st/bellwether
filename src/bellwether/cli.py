@@ -118,8 +118,13 @@ async def _run_async(
                 mock=mock,
                 via_crew=via_crew,
             )
-            html_path = write_audit_page(memo, memo_dir)
             ticket_id, comet_screenshot = _file_ticket(hs, s, memo, via_comet)
+            if ticket_id:
+                memo.hubspot_ticket_id = ticket_id
+                memo.hubspot_portal_id = cfg.HUBSPOT_PORTAL_ID or None
+            # Re-persist memo JSON so the audit HTML picks up ticket + extractor meta
+            html_path = write_audit_page(memo, memo_dir)
+            _persist_memo_json(memo, memo_dir)
             _print_summary(memo, html_path, ticket_id, comet_screenshot)
     finally:
         if client is not None:
@@ -181,6 +186,12 @@ def _file_ticket(
     except HubSpotError as e:
         console.print(f"[red]  ! HubSpot ticket failed: {e}[/red]")
         return None, screenshot
+
+
+def _persist_memo_json(memo: Memo, memo_dir: Path) -> None:
+    """Overwrite the dated .json sidecar so audit HTML + dashboard see latest meta."""
+    date = memo.generated_at.strftime("%Y-%m-%d")
+    (memo_dir / f"{memo.supplier.id}-{date}.json").write_text(memo.model_dump_json(indent=2))
 
 
 def _resolve(supplier_id: str | None):

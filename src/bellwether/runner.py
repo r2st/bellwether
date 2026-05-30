@@ -15,10 +15,22 @@ from .crew import run_crew_for_supplier
 from .evidence.brightdata import BrightDataClient
 from .evidence.cache import EvidenceCache
 from .evidence.collectors import collect_all
-from .extract.granite import Extractor
+from .extract.granite import Extractor, GraniteExtractor, MockExtractor
 from .memo.writer import write_memo
 from .models import Memo, Supplier
 from .score.scorer import score_supplier
+
+
+def _extraction_meta(extractor: Extractor) -> tuple[str, str]:
+    """Best-effort (model, provider) tuple for an extractor — surfaced in audit HTML."""
+    if isinstance(extractor, GraniteExtractor):
+        model = getattr(extractor, "model", "ibm-granite/granite")
+        base = str(getattr(extractor.client, "base_url", ""))
+        host = "openrouter" if "openrouter" in base else "amd-mi300x"
+        return model, host
+    if isinstance(extractor, MockExtractor):
+        return "regex-rules", "mock"
+    return getattr(extractor, "__class__", type(extractor)).__name__, "unknown"
 
 
 async def run_supplier(
@@ -34,7 +46,7 @@ async def run_supplier(
     """Run one supplier end-to-end. `via_crew=True` (default) routes through
     the CrewAI crew; pass `via_crew=False` to use the linear pipeline directly."""
     if via_crew:
-        return await run_crew_for_supplier(
+        memo = await run_crew_for_supplier(
             supplier,
             cache=cache,
             extractor=extractor,
@@ -42,10 +54,16 @@ async def run_supplier(
             memo_dir=memo_dir,
             mock=mock,
         )
-    evidence = await collect_all(supplier, cache, client, mock=mock)
-    signals = extractor.extract(supplier.name, evidence)
-    score = score_supplier(supplier.id, signals)
-    return write_memo(supplier, score, evidence, out_dir=memo_dir)
+    else:
+        evidence = await collect_all(supplier, cache, client, mock=mock)
+        signals = extractor.extract(supplier.name, evidence)
+        score = score_supplier(supplier.id, signals)
+        memo = write_memo(supplier, score, evidence, out_dir=memo_dir)
+
+    model, provider = _extraction_meta(extractor)
+    memo.extraction_model = model
+    memo.extraction_provider = provider
+    return memo
 
 
 def run_supplier_sync(supplier: Supplier, **kw) -> Memo:

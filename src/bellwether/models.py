@@ -80,3 +80,9 @@ class Memo(BaseModel):
     body_markdown: str
     evidence: list[EvidenceRecord]
     generated_at: datetime = Field(default_factory=_now)
+    # Optional metadata surfaced in the audit HTML so judges/auditors can see
+    # how the number was produced. Older memo JSON files load fine via defaults.
+    extraction_model: str | None = None
+    extraction_provider: str | None = None
+    hubspot_ticket_id: str | None = None
+    hubspot_portal_id: str | None = None

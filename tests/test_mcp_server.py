@@ -50,11 +50,14 @@ def test_tools_registered():
     assert "list_suppliers" in names
 
 
-def test_acme_memo_has_signals_and_sources():
-    payload = _payload(_call("query_supplier_risk", {"supplier_id": "acme-electronics"}))
-    assert payload["supplier_id"] == "acme-electronics"
+def test_foxconn_memo_has_signals_and_sources():
+    """Foxconn is the real-company demo supplier — should always produce signals
+    when run live. (The fictional suppliers correctly score 0 with no signals.)
+    """
+    payload = _payload(_call("query_supplier_risk", {"supplier_id": "foxconn"}))
+    assert payload["supplier_id"] == "foxconn"
     assert payload["score"] > 0
-    assert payload["top_signals"], "Acme demo memo must have signals"
+    assert payload["top_signals"], "Foxconn demo memo must have signals"
     # Every signal must carry at least one cited source (the auditable claim)
     for signal in payload["top_signals"]:
         assert signal["sources"], f"signal {signal['dimension']} has no sources"
